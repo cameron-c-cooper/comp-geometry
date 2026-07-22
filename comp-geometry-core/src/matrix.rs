@@ -8,7 +8,7 @@ use crate::{HeapStorage, Scalar, StackStorage, Storage};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Matrix<T: Scalar, const R: usize, const C: usize, S> {
     pub storage: S,
-    _marker: PhantomData<T>,
+    pub _marker: PhantomData<T>,
 }
 
 pub type SMatrix<T, const R: usize, const C: usize, const N: usize> =
@@ -137,7 +137,7 @@ macro_rules! smatrix {
         const N: usize = R * C;
 
         $crate::matrix::SMatrix::<_, R, C, N> {
-            storage: $crate::matrix::StackStorage { data },
+            storage: $crate::StackStorage { data },
             _marker: std::marker::PhantomData,
         }
     }};
@@ -237,7 +237,7 @@ macro_rules! hmatrix {
         let data = vec![ $( $( $x ),* ),* ];
 
         $crate::matrix::HMatrix::<_, R, C> {
-            storage: $crate::matrix::HeapStorage { data },
+            storage: $crate::HeapStorage { data },
             _marker: std::marker::PhantomData,
         }
     }};
