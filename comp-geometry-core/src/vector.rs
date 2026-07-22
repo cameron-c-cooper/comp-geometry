@@ -15,8 +15,8 @@ pub use crate::{
 };
 use crate::{Storage, matrix::Matrix};
 
-pub type SVector<T, const N: usize> = SMatrix<T, N, 1, N>;
-pub type HVector<T, const N: usize> = HMatrix<T, N, 1>;
+pub type SVector<T: Scalar, const N: usize> = SMatrix<T, N, 1, N>;
+pub type HVector<T: Scalar, const N: usize> = HMatrix<T, N, 1>;
 
 impl<T: Copy + Scalar> From<Vector2<T>> for SVector<T, 2> {
     #[inline]

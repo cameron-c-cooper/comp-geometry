@@ -3,6 +3,11 @@ use std::{
     ops::{Add, AddAssign, Index, IndexMut, Mul},
 };
 
+use allocator_api2::{
+    alloc::{Allocator, Global},
+    vec::Vec,
+};
+
 use crate::{HeapStorage, Scalar, StackStorage, Storage};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -11,7 +16,7 @@ pub struct Matrix<T: Scalar, const R: usize, const C: usize, S> {
     pub _marker: PhantomData<T>,
 }
 
-pub type SMatrix<T, const R: usize, const C: usize, const N: usize> =
+pub type SMatrix<T: Scalar, const R: usize, const C: usize, const N: usize> =
     Matrix<T, R, C, StackStorage<T, N>>;
 
 impl<T, const R: usize, const C: usize, S> Index<usize> for Matrix<T, R, C, S>
@@ -143,7 +148,8 @@ macro_rules! smatrix {
     }};
 }
 
-pub type HMatrix<T, const R: usize, const C: usize> = Matrix<T, R, C, HeapStorage<T>>;
+pub type HMatrix<T: Scalar, const R: usize, const C: usize, A: Allocator = Global> =
+    Matrix<T, R, C, HeapStorage<T, A>>;
 
 impl<T, const R: usize, const C: usize> HMatrix<T, R, C>
 where
@@ -167,7 +173,10 @@ where
     where
         T: Scalar,
     {
-        Self::from_vec(vec![T::zero(); R * C])
+        let len = R * C;
+        let mut data = Vec::with_capacity_in(len, Global);
+        data.resize(len, T::zero());
+        Self::from_vec(data)
     }
 }
 
@@ -234,7 +243,12 @@ macro_rules! hmatrix {
         const R: usize = 0 $( + { let _ = [ $( stringify!($x) ),* ]; 1 } )*;
         const TOTAL: usize = 0 $( $( + { let _ = stringify!($x); 1 } )* )*;
         const C: usize = if R == 0 { 0 } else { TOTAL / R };
-        let data = vec![ $( $( $x ),* ),* ];
+
+        let mut data = $crate::allocator_api2::vec::Vec::with_capacity_in(
+            TOTAL,
+            $crate::allocator_api2::alloc::Global,
+        );
+        $( $( data.push($x); )* )*
 
         $crate::matrix::HMatrix::<_, R, C> {
             storage: $crate::HeapStorage { data },
@@ -374,4 +388,4 @@ mod tests {
     }
 }
 
-pub type Matrix2x2<T, S> = Matrix<T, 2, 2, S>;
+pub type Matrix2x2<T: Scalar, S> = Matrix<T, 2, 2, S>;

@@ -1,10 +1,19 @@
 #![feature(generic_const_exprs)]
+#![feature(checked_type_aliases)]
 // #![feature(macro_metavar_expr)]
 #![allow(incomplete_features)]
+#![cfg_attr(feature = "nightly", feature(allocator_api))]
+
+pub extern crate allocator_api2;
 
 use std::{
     fmt::Debug,
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
+};
+
+use allocator_api2::{
+    alloc::{Allocator, Global},
+    vec::Vec,
 };
 
 pub mod euclidean_space;
@@ -157,9 +166,9 @@ impl<T: Scalar, const N: usize> Storage<T> for StackStorage<T, N> {
 }
 
 // TODO: Move this to HeapStorage<T, A = Allocator> once mem allocator is done
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct HeapStorage<T> {
-    pub data: Vec<T>,
+#[derive(Debug)]
+pub struct HeapStorage<T, A: Allocator = Global> {
+    pub data: Vec<T, A>,
 }
 
 impl<T> Index<usize> for HeapStorage<T> {
@@ -195,8 +204,33 @@ impl<T: Scalar> Storage<T> for HeapStorage<T> {
     where
         T: Scalar,
     {
-        Self {
-            data: vec![T::zero(); len],
+        let mut data = Vec::with_capacity_in(len, Global);
+        data.resize(len, T::zero());
+        Self { data }
+    }
+}
+
+impl<T, A: Allocator> Clone for HeapStorage<T, A>
+where
+    T: Clone,
+    A: Clone,
+{
+    fn clone(&self) -> Self {
+        // if you need a real allocator-aware clone later, this is where
+        // you'd clone_in() against self.data.allocator().clone()
+        HeapStorage {
+            data: self.data.clone(),
         }
     }
 }
+
+impl<T, A1: Allocator, A2: Allocator> PartialEq<HeapStorage<T, A2>> for HeapStorage<T, A1>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &HeapStorage<T, A2>) -> bool {
+        self.data.as_slice() == other.data.as_slice()
+    }
+}
+
+impl<T: Eq, A: Allocator> Eq for HeapStorage<T, A> {}
