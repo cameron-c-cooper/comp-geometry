@@ -283,18 +283,73 @@ where
 }
 
 
-// impl<T, const R: usize, const C: usize, const N: usize,S: Storage<T>> Mul<Matrix<T, C, N, S>>
-// for Matrix<T, R, C, S>
-// where 
-//     T: Scalar,
-//     S: Storage<T>
-// {
-//     type Output = Self;
-//     fn mul(self, rhs: Matrix<T, C, N, S>) -> Self::Output {
-//
-//     }
-// }
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> 
+    Mul<&Matrix<T, C, N, SRhs>>
+for &Matrix<T, R, C, SLhs>
+where 
+    T: Scalar,
+    SLhs: Storage<T>,
+    SRhs: Storage<T>,
+    SLhs::SameSize<{ R * N }>: Storage<T>
+{
+    type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
+    fn mul(self, rhs: &Matrix<T, C, N, SRhs>) -> Self::Output {
+        let mut out_storage = SLhs::SameSize::<{R * N}>::zeros(R * N);
+        let lhs_slice = self.storage.as_slice();
+        let rhs_slice = rhs.storage.as_slice();
+        let out_slice = out_storage.as_mut_slice();
 
+        for i in 0..R {
+            let out_row = i * N;
+            for k in 0..C {
+                let lhs_val = lhs_slice[i * C + k];
+                let rhs_row = k * N;
+                for j in 0..N {
+                    out_slice[out_row + j] += lhs_val * rhs_slice[rhs_row + j];
+                }
+            }
+        }
+        Matrix {
+            storage: out_storage,
+            _marker: PhantomData
+        }
+    }
+}
+
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs>
+    Mul<&Matrix<T, C, N, SRhs>> for Matrix<T, R, C, SLhs>
+where
+    T: Scalar,
+    SLhs: Storage<T>,
+    SRhs: Storage<T>,
+    SLhs::SameSize<{ R * N }>: Storage<T>,
+    for<'a, 'b> &'a Matrix<T, R, C, SLhs>: Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
+{
+    type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
+
+    #[inline]
+    fn mul(self, rhs: &Matrix<T, C, N, SRhs>) -> Self::Output {
+        &self * rhs
+    }
+}
+
+// Matrix * Matrix
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs>
+    Mul<Matrix<T, C, N, SRhs>> for Matrix<T, R, C, SLhs>
+where
+    T: Scalar,
+    SLhs: Storage<T>,
+    SRhs: Storage<T>,
+    SLhs::SameSize<{ R * N }>: Storage<T>,
+    for<'a, 'b> &'a Matrix<T, R, C, SLhs>: Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
+{
+    type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
+
+    #[inline]
+    fn mul(self, rhs: Matrix<T, C, N, SRhs>) -> Self::Output {
+        &self * &rhs
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -312,9 +367,17 @@ mod tests {
     }
 
     #[test]
-    fn test_transpose() {
+    fn mat_transpose() {
         let mat = matrix![[1, 3], [4, 2]];
         let golden_mat = matrix![[1, 4], [3, 2]];
         assert_eq!(mat.transpose(), golden_mat);
+    }
+
+    #[test]
+    fn mat_mul() {
+        let mat_lhs = matrix![[4,5,7],[2,1,0]];
+        let mat_rhs = matrix![[2,3],[8,9],[1,1]];
+        let golden_mat = matrix![[55,64],[12,15]];
+        assert_eq!(mat_lhs * mat_rhs, golden_mat);
     }
 }

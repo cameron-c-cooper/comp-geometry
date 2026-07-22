@@ -103,6 +103,7 @@ impl_scalar_sint!(i32, i64, i128, isize);
 impl_scalar_uint!(u32, u64, u128, usize);
 
 pub trait Storage<T>: Index<usize, Output = T> + IndexMut<usize, Output = T> {
+    type SameSize<const N: usize>: Storage<T>;
     fn as_slice(&self) -> &[T];
     fn as_mut_slice(&mut self) -> &mut [T];
     fn zeros(len: usize) -> Self where T: Scalar;
@@ -128,6 +129,7 @@ impl<T, const N: usize> IndexMut<usize> for StackStorage<T, N> {
 }
 
 impl<T: Scalar, const N: usize> Storage<T> for StackStorage<T, N> {
+    type SameSize<const M: usize> = StackStorage<T, M>;
     #[inline]
     fn as_slice(&self) -> &[T] {
         &self.data
@@ -137,7 +139,8 @@ impl<T: Scalar, const N: usize> Storage<T> for StackStorage<T, N> {
         &mut self.data
     }
     #[inline]
-    fn zeros(len: usize) -> Self where T: Scalar {
+    // dont need the len, type system encodes it
+    fn zeros(_: usize) -> Self where T: Scalar {
        Self {
            data: [T::zero(); N]
        }
@@ -166,6 +169,8 @@ impl<T> IndexMut<usize> for HeapStorage<T> {
 
 
 impl<T: Scalar> Storage<T> for HeapStorage<T> {
+    type SameSize<const M: usize> = HeapStorage<T>;
+
     #[inline]
     fn as_slice(&self) -> &[T] {
         &self.data
