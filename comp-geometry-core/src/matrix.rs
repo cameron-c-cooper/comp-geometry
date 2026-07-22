@@ -134,7 +134,7 @@ where
 }
 
 #[macro_export]
-macro_rules! matrix {
+macro_rules! smatrix {
     ( $( [ $( $x:expr ),* $(,)? ] ),* $(,)? ) => {{
         const R: usize = 0 $( + { let _ = stringify!($x); 1 } )*;
         const C: usize = 0 $( + ${ignore($x)} 1 )*;
@@ -145,6 +145,84 @@ macro_rules! matrix {
             _marker: std::marker::PhantomData,
         }
     }};
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HeapStorage<T> {
+    pub data: Vec<T>,
+}
+
+impl<T> Index<usize> for HeapStorage<T> {
+    type Output = T;
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl<T> IndexMut<usize> for HeapStorage<T> {
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}
+
+impl<T> Storage<T> for HeapStorage<T> {
+    #[inline]
+    fn as_slice(&self) -> &[T] {
+        &self.data
+    }
+        
+    #[inline]
+    fn as_mut_slice(&mut self) -> &mut [T] {
+        &mut self.data
+    }
+}
+
+pub type HMatrix<T, const R: usize, const C: usize> =
+    Matrix<T, R, C, HeapStorage<T>>;
+
+impl <T, const R: usize, const C: usize> HMatrix<T, R, C> 
+where 
+    T: Scalar
+{
+    pub fn from_vec(data: Vec<T>) -> Self {
+        assert_eq!(data.len(), R * C,
+            "Vector length {} does not match matrix size {}x{}",
+            data.len(), R, C
+        );
+        Matrix {
+            storage: HeapStorage { data },
+            _marker: PhantomData
+        }
+    }
+    pub fn zeros() -> Self 
+    where  
+        T: Scalar,
+    {
+        Self::from_vec(vec![T::zero(); R * C])
+    }
+}
+
+#[macro_export]
+macro_rules! hmatrix {
+    ( $( [ $( $x:expr ),* $(,)? ] ),* $(,)? ) => {{
+        const R: usize = 0 $( + { let _ = stringify!($x); 1 } )*;
+        const C: usize = 0 $( + ${ignore($x)} 1 )*;
+        let data = [ $( $( $x ),* ),* ];
+        const N: usize = R * C;
+        $crate::matrix::HMatrix::<_, R, C> {
+            storage: $crate::matrix::HeapStorage { data },
+            _marker: std::marker::PhantomData,
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! matrix {
+    ( $($tt:tt)* ) => {
+        $crate::smatrix!( $($tt)* )
+    };
 }
 
 // TODO: Implement heap/dyn matrix, add some tests for mul, add, dot, etc
