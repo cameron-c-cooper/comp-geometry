@@ -1,6 +1,6 @@
 use std::{
     marker::PhantomData,
-    ops::{Add, AddAssign, Index, IndexMut},
+    ops::{Add, AddAssign, Index, IndexMut, Mul},
 };
 
 use crate::{Scalar, StackStorage, Storage};
@@ -151,38 +151,6 @@ macro_rules! smatrix {
     }};
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct HeapStorage<T> {
-    pub data: Vec<T>,
-}
-
-impl<T> Index<usize> for HeapStorage<T> {
-    type Output = T;
-    #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]
-    }
-}
-
-impl<T> IndexMut<usize> for HeapStorage<T> {
-    #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.data[index]
-    }
-}
-
-impl<T> Storage<T> for HeapStorage<T> {
-    #[inline]
-    fn as_slice(&self) -> &[T] {
-        &self.data
-    }
-        
-    #[inline]
-    fn as_mut_slice(&mut self) -> &mut [T] {
-        &mut self.data
-    }
-}
-
 pub type HMatrix<T, const R: usize, const C: usize> =
     Matrix<T, R, C, HeapStorage<T>>;
 
@@ -292,6 +260,41 @@ macro_rules! matrix {
         $crate::smatrix!( $($tt)* )
     };
 }
+
+impl<T, const R: usize, const C: usize, S: Storage<T>> Matrix<T, R, C , S>
+where 
+    T: Scalar,
+    S: Storage<T>
+{
+    fn transpose<SOut>(&self) -> Matrix<T, C, R, SOut> where SOut: Storage<T> {
+        let mut out_storage = SOut::zeros(R * C);
+        let src = self.storage.as_slice();
+        let dst = out_storage.as_mut_slice();
+        for i in 0..R {
+            for j in 0..C {
+                dst[j * R + i] = src[i * C + j];;
+            }
+        }
+        Matrix {
+            storage: out_storage,
+            _marker: PhantomData
+        }
+    }
+}
+
+
+impl<T, const R: usize, const C: usize, const N: usize,S: Storage<T>> Mul<Matrix<T, C, N, S>>
+for Matrix<T, R, C, S>
+where 
+    T: Scalar,
+    S: Storage<T>
+{
+    type Output = Self;
+    fn mul(self, rhs: Matrix<T, C, N, S>) -> Self::Output {
+             
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

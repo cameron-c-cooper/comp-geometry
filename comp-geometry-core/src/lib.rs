@@ -105,6 +105,7 @@ impl_scalar_uint!(u32, u64, u128, usize);
 pub trait Storage<T>: Index<usize, Output = T> + IndexMut<usize, Output = T> {
     fn as_slice(&self) -> &[T];
     fn as_mut_slice(&mut self) -> &mut [T];
+    fn zeros(len: usize) -> Self where T: Scalar;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -126,7 +127,7 @@ impl<T, const N: usize> IndexMut<usize> for StackStorage<T, N> {
     }
 }
 
-impl<T, const N: usize> Storage<T> for StackStorage<T, N> {
+impl<T: Scalar, const N: usize> Storage<T> for StackStorage<T, N> {
     #[inline]
     fn as_slice(&self) -> &[T] {
         &self.data
@@ -134,5 +135,51 @@ impl<T, const N: usize> Storage<T> for StackStorage<T, N> {
     #[inline]
     fn as_mut_slice(&mut self) -> &mut [T] {
         &mut self.data
+    }
+    #[inline]
+    fn zeros(len: usize) -> Self where T: Scalar {
+       Self {
+           data: [T::zero(); N]
+       }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HeapStorage<T> {
+    pub data: Vec<T>,
+}
+
+impl<T> Index<usize> for HeapStorage<T> {
+    type Output = T;
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl<T> IndexMut<usize> for HeapStorage<T> {
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}
+
+
+impl<T: Scalar> Storage<T> for HeapStorage<T> {
+    #[inline]
+    fn as_slice(&self) -> &[T] {
+        &self.data
+    }
+        
+    #[inline]
+    fn as_mut_slice(&mut self) -> &mut [T] {
+        &mut self.data
+    }
+
+    #[inline]
+    fn zeros(len: usize) -> Self where T: Scalar {
+        Self {
+            data: vec![T::zero(); len] 
+        }
     }
 }
