@@ -1,0 +1,153 @@
+#![feature(generic_const_exprs)]
+#![feature(macro_metavar_expr)]
+#![allow(incomplete_features)]
+
+use std::{
+    fmt::Debug,
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
+};
+
+pub mod matrix;
+
+pub trait Scalar:
+    Copy
+    + PartialOrd
+    + Debug
+    + PartialEq
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Mul<Output = Self>
+    + Div<Output = Self>
+    // + Neg<Output = Self>
+    + AddAssign
+    + SubAssign
+    + MulAssign
+    + DivAssign
+    + 'static
+{
+    fn zero() -> Self;
+    fn one() -> Self;
+    fn is_zero(&self) -> bool;
+}
+
+pub trait SignedScalar: Scalar + Neg<Output = Self> {}
+
+pub trait RealScalar: Scalar {
+    fn sqrt(self) -> Self;
+    fn sin(self) -> Self;
+    fn cos(self) -> Self;
+    fn atan2(y: Self, x: Self) -> Self;
+    fn abs(self) -> Self;
+}
+
+macro_rules! impl_scalar_float {
+    ($($t:ty),*) => {
+        $(
+            impl Scalar for $t {
+                #[inline]
+                fn zero() -> Self { 0.0 }
+                #[inline]
+                fn one() -> Self { 1.0 }
+                #[inline]
+                fn is_zero(&self) -> bool { self.abs() < <$t>::EPSILON }
+            }
+
+            impl RealScalar for $t {
+                #[inline] fn sqrt(self) -> Self { self.sqrt() }
+                #[inline] fn sin(self) -> Self { self.sin() }
+                #[inline] fn cos(self) -> Self { self.cos() }
+                #[inline] fn atan2(y: Self, x: Self) -> Self { y.atan2(x) }
+                #[inline] fn abs(self) -> Self { self.abs() }
+            }
+
+            impl SignedScalar for $t {}
+        )*
+    };
+}
+
+macro_rules! impl_scalar_sint {
+    ($($t:ty),*) => {
+        $(
+            impl Scalar for $t {
+                #[inline]
+                fn zero() -> Self { 0 }
+                #[inline]
+                fn one() -> Self { 1 }
+                #[inline]
+                fn is_zero(&self) -> bool { *self == 0 }
+            }
+
+            impl SignedScalar for $t {}
+        )*
+    };
+}
+
+macro_rules! impl_scalar_uint {
+    ($($t:ty),*) => {
+        $(
+            impl Scalar for $t {
+                #[inline]
+                fn zero() -> Self { 0 }
+                #[inline]
+                fn one() -> Self { 1 }
+                #[inline]
+                fn is_zero(&self) -> bool { *self == 0 }
+            }
+        )*
+    };
+}
+
+// not gonna support uint
+impl_scalar_float!(f32, f64);
+impl_scalar_sint!(i32, i64, i128, isize);
+impl_scalar_uint!(u32, u64, u128, usize);
+
+pub trait Storage<T>: Index<usize, Output = T> + IndexMut<usize, Output = T> {
+    fn as_slice(&self) -> &[T];
+    fn as_mut_slice(&mut self) -> &mut [T];
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StackStorage<T, const N: usize> {
+    pub data: [T; N],
+}
+
+impl<T, const N: usize> Index<usize> for StackStorage<T, N> {
+    type Output = T;
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl<T, const N: usize> IndexMut<usize> for StackStorage<T, N> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}
+
+impl<T, const N: usize> Storage<T> for StackStorage<T, N> {
+    #[inline]
+    fn as_slice(&self) -> &[T] {
+        &self.data
+    }
+    #[inline]
+    fn as_mut_slice(&mut self) -> &mut [T] {
+        &mut self.data
+    }
+}
+
+pub fn add(left: u64, right: u64) -> u64 {
+    left + right
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = add(2, 2);
+        assert_eq!(result, 4);
+    }
+}
