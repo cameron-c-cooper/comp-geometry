@@ -2,7 +2,8 @@
 // #![feature(macro_metavar_expr)]
 #![allow(incomplete_features)]
 
-use std::{ fmt::Debug, ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign}, };
+use std::{ fmt::Debug,
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign}, };
 
 pub mod matrix;
 pub mod vector;
