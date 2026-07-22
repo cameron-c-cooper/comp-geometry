@@ -5,6 +5,7 @@ use std::{
 
 use crate::{Scalar, StackStorage, Storage};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Matrix<T: Scalar, const R: usize, const C: usize, S> {
     pub storage: S,
     _marker: PhantomData<T>,
@@ -136,10 +137,13 @@ where
 #[macro_export]
 macro_rules! smatrix {
     ( $( [ $( $x:expr ),* $(,)? ] ),* $(,)? ) => {{
-        const R: usize = 0 $( + { let _ = stringify!($x); 1 } )*;
-        const C: usize = 0 $( + ${ignore($x)} 1 )*;
+        const R: usize = 0 $( + { let _ = [ $( stringify!($x) ),* ]; 1 } )*;
+        const TOTAL: usize = 0 $( $( + { let _ = stringify!($x); 1 } )* )*;
+        const C: usize = if R == 0 { 0 } else { TOTAL / R };
+        
         let data = [ $( $( $x ),* ),* ];
         const N: usize = R * C;
+        
         $crate::matrix::SMatrix::<_, R, C, N> {
             storage: $crate::matrix::StackStorage { data },
             _marker: std::marker::PhantomData,
@@ -204,13 +208,77 @@ where
     }
 }
 
+impl<T, const R: usize, const C: usize> 
+    Add<&HMatrix<T, R, C>>
+for HMatrix<T, R, C>
+where 
+    T: Scalar,
+    HeapStorage<T>: Storage<T>
+{
+    type Output = Self;
+    fn add(self, rhs: &HMatrix<T, R, C>) -> Self::Output {
+        let len: usize = R * C;
+        let mut data: Vec<T> = Vec::with_capacity(len);
+        let lhs_slice = self.storage.as_slice();
+        let rhs_slice = rhs.storage.as_slice();
+
+        for i in 0..len {
+            data.push(lhs_slice[i] + rhs_slice[i]);
+        }
+        Matrix {
+            storage: HeapStorage { data },
+            _marker: PhantomData
+        }
+    }
+}
+
+impl<T, const R: usize, const C: usize> 
+    Add<&HMatrix<T, R, C>>
+for &HMatrix<T, R, C>
+where 
+    T: Scalar,
+    HeapStorage<T>: Storage<T>
+{
+    type Output = HMatrix<T, R, C>;
+    #[inline]
+    fn add(self, rhs: &HMatrix<T, R, C>) -> Self::Output {
+        let len: usize = R * C;
+        let mut data: Vec<T> = Vec::with_capacity(len);
+        let lhs_slice = self.storage.as_slice();
+        let rhs_slice = rhs.storage.as_slice();
+
+        for i in 0..len {
+            data.push(lhs_slice[i] + rhs_slice[i]);
+        }
+        Matrix {
+            storage: HeapStorage { data },
+            _marker: PhantomData
+        }
+    }
+}
+
+impl<T, const R: usize, const C: usize> Add
+for 
+    HMatrix<T, R, C>
+where 
+    T: Scalar,
+    HeapStorage<T>: Storage<T>,
+{
+    type Output = Self;
+    #[inline]
+    fn add(self, rhs: Self) -> Self::Output {
+        &self + &rhs
+    }
+}
+
 #[macro_export]
 macro_rules! hmatrix {
     ( $( [ $( $x:expr ),* $(,)? ] ),* $(,)? ) => {{
-        const R: usize = 0 $( + { let _ = stringify!($x); 1 } )*;
-        const C: usize = 0 $( + ${ignore($x)} 1 )*;
-        let data = [ $( $( $x ),* ),* ];
-        const N: usize = R * C;
+        const R: usize = 0 $( + { let _ = [ $( stringify!($x) ),* ]; 1 } )*;
+        const TOTAL: usize = 0 $( $( + { let _ = stringify!($x); 1 } )* )*;
+        const C: usize = if R == 0 { 0 } else { TOTAL / R };
+        let data = vec![ $( $( $x ),* ),* ];
+        
         $crate::matrix::HMatrix::<_, R, C> {
             storage: $crate::matrix::HeapStorage { data },
             _marker: std::marker::PhantomData,
@@ -225,4 +293,18 @@ macro_rules! matrix {
     };
 }
 
-// TODO: Implement heap/dyn matrix, add some tests for mul, add, dot, etc
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn mat_add() {
+        let smat_rhs = smatrix![[1, 2], [3, 4]];
+        let smat_lhs = smatrix![[4, 3], [2, 1]];
+        let golden_smat = smatrix![[5, 5], [5, 5]];
+        assert_eq!(smat_rhs + smat_lhs, golden_smat);
+
+        let hmat_rhs = hmatrix![[1, 2], [3, 4]];
+        let hmat_lhs = hmatrix![[4, 3], [2, 1]];
+        let golden_hmat = hmatrix![[5, 5], [5, 5]];
+        assert_eq!(hmat_rhs + hmat_lhs, golden_hmat);
+    }
+}

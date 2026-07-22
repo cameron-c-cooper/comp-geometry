@@ -1,5 +1,5 @@
 #![feature(generic_const_exprs)]
-#![feature(macro_metavar_expr)]
+// #![feature(macro_metavar_expr)]
 #![allow(incomplete_features)]
 
 use std::{
@@ -134,20 +134,5 @@ impl<T, const N: usize> Storage<T> for StackStorage<T, N> {
     #[inline]
     fn as_mut_slice(&mut self) -> &mut [T] {
         &mut self.data
-    }
-}
-
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
     }
 }
