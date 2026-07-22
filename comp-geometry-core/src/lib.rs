@@ -10,6 +10,7 @@ use std::{
 pub mod euclidean_space;
 pub mod inner_space;
 pub mod matrix;
+pub mod point;
 pub mod vector;
 
 pub trait Scalar:

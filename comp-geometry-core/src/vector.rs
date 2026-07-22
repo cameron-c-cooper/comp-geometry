@@ -15,21 +15,6 @@ pub use crate::{
 };
 use crate::{Storage, matrix::Matrix};
 
-#[repr(C)]
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Point2<T> {
-    pub x: T,
-    pub y: T,
-}
-
-#[repr(C)]
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Point3<T> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
-}
-
 pub type SVector<T, const N: usize> = SMatrix<T, N, 1, N>;
 pub type HVector<T, const N: usize> = HMatrix<T, N, 1>;
 
@@ -200,6 +185,7 @@ macro_rules! impl_vector {
 
 impl_vector!(Vector2 { x, y });
 impl_vector!(Vector3 { x, y, z });
+impl_vector!(Vector4 { x, y, z, w });
 
 #[cfg(test)]
 mod tests {
