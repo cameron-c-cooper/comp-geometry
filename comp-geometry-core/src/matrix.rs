@@ -373,3 +373,5 @@ mod tests {
         assert_eq!(mat_lhs * mat_rhs, golden_mat);
     }
 }
+
+pub type Matrix2x2<T, S> = Matrix<T, 2, 2, S>;

@@ -156,6 +156,7 @@ impl<T: Scalar, const N: usize> Storage<T> for StackStorage<T, N> {
     }
 }
 
+// TODO: Move this to HeapStorage<T, A = Allocator> once mem allocator is done
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HeapStorage<T> {
     pub data: Vec<T>,
