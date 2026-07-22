@@ -199,7 +199,7 @@ macro_rules! impl_vector {
 }
 
 impl_vector!(Vector2 { x, y });
-impl_vector!(Vector3 { x, y });
+impl_vector!(Vector3 { x, y, z });
 
 #[cfg(test)]
 mod tests {
