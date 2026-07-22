@@ -7,6 +7,8 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
+pub mod euclidean_space;
+pub mod inner_space;
 pub mod matrix;
 pub mod vector;
 
