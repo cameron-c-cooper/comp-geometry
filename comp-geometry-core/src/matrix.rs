@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Index, IndexMut, Mul},
 };
 
-use crate::{Scalar, StackStorage, Storage};
+use crate::{Scalar, StackStorage, HeapStorage, Storage};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Matrix<T: Scalar, const R: usize, const C: usize, S> {
@@ -266,13 +266,13 @@ where
     T: Scalar,
     S: Storage<T>
 {
-    fn transpose<SOut>(&self) -> Matrix<T, C, R, SOut> where SOut: Storage<T> {
+    pub fn transpose<SOut>(&self) -> Matrix<T, C, R, SOut> where SOut: Storage<T> {
         let mut out_storage = SOut::zeros(R * C);
         let src = self.storage.as_slice();
         let dst = out_storage.as_mut_slice();
         for i in 0..R {
             for j in 0..C {
-                dst[j * R + i] = src[i * C + j];;
+                dst[j * R + i] = src[i * C + j];
             }
         }
         Matrix {
@@ -283,17 +283,17 @@ where
 }
 
 
-impl<T, const R: usize, const C: usize, const N: usize,S: Storage<T>> Mul<Matrix<T, C, N, S>>
-for Matrix<T, R, C, S>
-where 
-    T: Scalar,
-    S: Storage<T>
-{
-    type Output = Self;
-    fn mul(self, rhs: Matrix<T, C, N, S>) -> Self::Output {
-             
-    }
-}
+// impl<T, const R: usize, const C: usize, const N: usize,S: Storage<T>> Mul<Matrix<T, C, N, S>>
+// for Matrix<T, R, C, S>
+// where 
+//     T: Scalar,
+//     S: Storage<T>
+// {
+//     type Output = Self;
+//     fn mul(self, rhs: Matrix<T, C, N, S>) -> Self::Output {
+//
+//     }
+// }
 
 
 #[cfg(test)]
@@ -309,5 +309,12 @@ mod tests {
         let hmat_lhs = hmatrix![[4, 3], [2, 1]];
         let golden_hmat = hmatrix![[5, 5], [5, 5]];
         assert_eq!(hmat_rhs + hmat_lhs, golden_hmat);
+    }
+
+    #[test]
+    fn test_transpose() {
+        let mat = matrix![[1, 3], [4, 2]];
+        let golden_mat = matrix![[1, 4], [3, 2]];
+        assert_eq!(mat.transpose(), golden_mat);
     }
 }

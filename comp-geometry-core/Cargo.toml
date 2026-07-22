@@ -2,6 +2,3 @@
 name = "comp-geometry-core"
 version = "0.1.0"
 edition = "2024"
-
-[dependencies]
-packed_simd = "0.3.9"
