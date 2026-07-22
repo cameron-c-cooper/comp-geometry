@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Index, IndexMut, Mul},
 };
 
-use crate::{Scalar, StackStorage, HeapStorage, Storage};
+use crate::{HeapStorage, Scalar, StackStorage, Storage};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Matrix<T: Scalar, const R: usize, const C: usize, S> {
@@ -17,7 +17,7 @@ pub type SMatrix<T, const R: usize, const C: usize, const N: usize> =
 impl<T, const R: usize, const C: usize, S> Index<usize> for Matrix<T, R, C, S>
 where
     S: Storage<T>,
-    T: Scalar
+    T: Scalar,
 {
     type Output = [T];
     #[inline]
@@ -32,7 +32,7 @@ where
 impl<T, const R: usize, const C: usize, S> IndexMut<usize> for Matrix<T, R, C, S>
 where
     S: Storage<T>,
-    T: Scalar
+    T: Scalar,
 {
     #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
@@ -43,12 +43,10 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, S> AddAssign<&Matrix<T, R, C, S>>
-for 
-    Matrix<T, R, C, S>
-where 
+impl<T, const R: usize, const C: usize, S> AddAssign<&Matrix<T, R, C, S>> for Matrix<T, R, C, S>
+where
     T: Scalar + AddAssign,
-    S: Storage<T>
+    S: Storage<T>,
 {
     #[inline]
     fn add_assign(&mut self, rhs: &Matrix<T, R, C, S>) {
@@ -60,12 +58,10 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, S> AddAssign<Matrix<T, R, C, S>>
-for 
-    Matrix<T, R, C, S>
-where 
+impl<T, const R: usize, const C: usize, S> AddAssign<Matrix<T, R, C, S>> for Matrix<T, R, C, S>
+where
     T: Scalar + AddAssign,
-    S: Storage<T>
+    S: Storage<T>,
 {
     #[inline]
     fn add_assign(&mut self, rhs: Matrix<T, R, C, S>) {
@@ -73,10 +69,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize> Add
-for 
-    SMatrix<T, R, C, N>
-where 
+impl<T, const R: usize, const C: usize, const N: usize> Add for SMatrix<T, R, C, N>
+where
     T: Scalar,
     StackStorage<T, N>: Storage<T>,
 {
@@ -87,12 +81,11 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize> 
-    Add<&SMatrix<T, R, C, N>>
-for SMatrix<T, R, C, N>
-where 
+impl<T, const R: usize, const C: usize, const N: usize> Add<&SMatrix<T, R, C, N>>
+    for SMatrix<T, R, C, N>
+where
     T: Scalar,
-    StackStorage<T, N>: Storage<T>
+    StackStorage<T, N>: Storage<T>,
 {
     type Output = Self;
     fn add(self, rhs: &SMatrix<T, R, C, N>) -> Self::Output {
@@ -105,17 +98,16 @@ where
         }
         Matrix {
             storage: StackStorage { data },
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize> 
-    Add<&SMatrix<T, R, C, N>>
-for &SMatrix<T, R, C, N>
-where 
+impl<T, const R: usize, const C: usize, const N: usize> Add<&SMatrix<T, R, C, N>>
+    for &SMatrix<T, R, C, N>
+where
     T: Scalar,
-    StackStorage<T, N>: Storage<T>
+    StackStorage<T, N>: Storage<T>,
 {
     type Output = SMatrix<T, R, C, N>;
     #[inline]
@@ -129,7 +121,7 @@ where
         }
         Matrix {
             storage: StackStorage { data },
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 }
@@ -140,10 +132,10 @@ macro_rules! smatrix {
         const R: usize = 0 $( + { let _ = [ $( stringify!($x) ),* ]; 1 } )*;
         const TOTAL: usize = 0 $( $( + { let _ = stringify!($x); 1 } )* )*;
         const C: usize = if R == 0 { 0 } else { TOTAL / R };
-        
+
         let data = [ $( $( $x ),* ),* ];
         const N: usize = R * C;
-        
+
         $crate::matrix::SMatrix::<_, R, C, N> {
             storage: $crate::matrix::StackStorage { data },
             _marker: std::marker::PhantomData,
@@ -151,37 +143,38 @@ macro_rules! smatrix {
     }};
 }
 
-pub type HMatrix<T, const R: usize, const C: usize> =
-    Matrix<T, R, C, HeapStorage<T>>;
+pub type HMatrix<T, const R: usize, const C: usize> = Matrix<T, R, C, HeapStorage<T>>;
 
-impl <T, const R: usize, const C: usize> HMatrix<T, R, C> 
-where 
-    T: Scalar
+impl<T, const R: usize, const C: usize> HMatrix<T, R, C>
+where
+    T: Scalar,
 {
     pub fn from_vec(data: Vec<T>) -> Self {
-        assert_eq!(data.len(), R * C,
+        assert_eq!(
+            data.len(),
+            R * C,
             "Vector length {} does not match matrix size {}x{}",
-            data.len(), R, C
+            data.len(),
+            R,
+            C
         );
         Matrix {
             storage: HeapStorage { data },
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
-    pub fn zeros() -> Self 
-    where  
+    pub fn zeros() -> Self
+    where
         T: Scalar,
     {
         Self::from_vec(vec![T::zero(); R * C])
     }
 }
 
-impl<T, const R: usize, const C: usize> 
-    Add<&HMatrix<T, R, C>>
-for HMatrix<T, R, C>
-where 
+impl<T, const R: usize, const C: usize> Add<&HMatrix<T, R, C>> for HMatrix<T, R, C>
+where
     T: Scalar,
-    HeapStorage<T>: Storage<T>
+    HeapStorage<T>: Storage<T>,
 {
     type Output = Self;
     fn add(self, rhs: &HMatrix<T, R, C>) -> Self::Output {
@@ -195,17 +188,15 @@ where
         }
         Matrix {
             storage: HeapStorage { data },
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 }
 
-impl<T, const R: usize, const C: usize> 
-    Add<&HMatrix<T, R, C>>
-for &HMatrix<T, R, C>
-where 
+impl<T, const R: usize, const C: usize> Add<&HMatrix<T, R, C>> for &HMatrix<T, R, C>
+where
     T: Scalar,
-    HeapStorage<T>: Storage<T>
+    HeapStorage<T>: Storage<T>,
 {
     type Output = HMatrix<T, R, C>;
     #[inline]
@@ -220,15 +211,13 @@ where
         }
         Matrix {
             storage: HeapStorage { data },
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 }
 
-impl<T, const R: usize, const C: usize> Add
-for 
-    HMatrix<T, R, C>
-where 
+impl<T, const R: usize, const C: usize> Add for HMatrix<T, R, C>
+where
     T: Scalar,
     HeapStorage<T>: Storage<T>,
 {
@@ -246,7 +235,7 @@ macro_rules! hmatrix {
         const TOTAL: usize = 0 $( $( + { let _ = stringify!($x); 1 } )* )*;
         const C: usize = if R == 0 { 0 } else { TOTAL / R };
         let data = vec![ $( $( $x ),* ),* ];
-        
+
         $crate::matrix::HMatrix::<_, R, C> {
             storage: $crate::matrix::HeapStorage { data },
             _marker: std::marker::PhantomData,
@@ -261,12 +250,15 @@ macro_rules! matrix {
     };
 }
 
-impl<T, const R: usize, const C: usize, S: Storage<T>> Matrix<T, R, C , S>
-where 
+impl<T, const R: usize, const C: usize, S: Storage<T>> Matrix<T, R, C, S>
+where
     T: Scalar,
-    S: Storage<T>
+    S: Storage<T>,
 {
-    pub fn transpose<SOut>(&self) -> Matrix<T, C, R, SOut> where SOut: Storage<T> {
+    pub fn transpose<SOut>(&self) -> Matrix<T, C, R, SOut>
+    where
+        SOut: Storage<T>,
+    {
         let mut out_storage = SOut::zeros(R * C);
         let src = self.storage.as_slice();
         let dst = out_storage.as_mut_slice();
@@ -277,24 +269,22 @@ where
         }
         Matrix {
             storage: out_storage,
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 }
 
-
-impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> 
-    Mul<&Matrix<T, C, N, SRhs>>
-for &Matrix<T, R, C, SLhs>
-where 
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> Mul<&Matrix<T, C, N, SRhs>>
+    for &Matrix<T, R, C, SLhs>
+where
     T: Scalar,
     SLhs: Storage<T>,
     SRhs: Storage<T>,
-    SLhs::SameSize<{ R * N }>: Storage<T>
+    SLhs::SameSize<{ R * N }>: Storage<T>,
 {
     type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
     fn mul(self, rhs: &Matrix<T, C, N, SRhs>) -> Self::Output {
-        let mut out_storage = SLhs::SameSize::<{R * N}>::zeros(R * N);
+        let mut out_storage = SLhs::SameSize::<{ R * N }>::zeros(R * N);
         let lhs_slice = self.storage.as_slice();
         let rhs_slice = rhs.storage.as_slice();
         let out_slice = out_storage.as_mut_slice();
@@ -311,19 +301,20 @@ where
         }
         Matrix {
             storage: out_storage,
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs>
-    Mul<&Matrix<T, C, N, SRhs>> for Matrix<T, R, C, SLhs>
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> Mul<&Matrix<T, C, N, SRhs>>
+    for Matrix<T, R, C, SLhs>
 where
     T: Scalar,
     SLhs: Storage<T>,
     SRhs: Storage<T>,
     SLhs::SameSize<{ R * N }>: Storage<T>,
-    for<'a, 'b> &'a Matrix<T, R, C, SLhs>: Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
+    for<'a, 'b> &'a Matrix<T, R, C, SLhs>:
+        Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
 {
     type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
 
@@ -334,14 +325,15 @@ where
 }
 
 // Matrix * Matrix
-impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs>
-    Mul<Matrix<T, C, N, SRhs>> for Matrix<T, R, C, SLhs>
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> Mul<Matrix<T, C, N, SRhs>>
+    for Matrix<T, R, C, SLhs>
 where
     T: Scalar,
     SLhs: Storage<T>,
     SRhs: Storage<T>,
     SLhs::SameSize<{ R * N }>: Storage<T>,
-    for<'a, 'b> &'a Matrix<T, R, C, SLhs>: Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
+    for<'a, 'b> &'a Matrix<T, R, C, SLhs>:
+        Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
 {
     type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
 
@@ -375,9 +367,9 @@ mod tests {
 
     #[test]
     fn mat_mul() {
-        let mat_lhs = matrix![[4,5,7],[2,1,0]];
-        let mat_rhs = matrix![[2,3],[8,9],[1,1]];
-        let golden_mat = matrix![[55,64],[12,15]];
+        let mat_lhs = matrix![[4, 5, 7], [2, 1, 0]];
+        let mat_rhs = matrix![[2, 3], [8, 9], [1, 1]];
+        let golden_mat = matrix![[55, 64], [12, 15]];
         assert_eq!(mat_lhs * mat_rhs, golden_mat);
     }
 }

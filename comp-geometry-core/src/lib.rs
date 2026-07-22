@@ -8,6 +8,7 @@ use std::{
 };
 
 pub mod matrix;
+pub mod vector;
 
 pub trait Scalar:
     Copy
@@ -106,7 +107,9 @@ pub trait Storage<T>: Index<usize, Output = T> + IndexMut<usize, Output = T> {
     type SameSize<const N: usize>: Storage<T>;
     fn as_slice(&self) -> &[T];
     fn as_mut_slice(&mut self) -> &mut [T];
-    fn zeros(len: usize) -> Self where T: Scalar;
+    fn zeros(len: usize) -> Self
+    where
+        T: Scalar;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -140,10 +143,13 @@ impl<T: Scalar, const N: usize> Storage<T> for StackStorage<T, N> {
     }
     #[inline]
     // dont need the len, type system encodes it
-    fn zeros(_: usize) -> Self where T: Scalar {
-       Self {
-           data: [T::zero(); N]
-       }
+    fn zeros(_: usize) -> Self
+    where
+        T: Scalar,
+    {
+        Self {
+            data: [T::zero(); N],
+        }
     }
 }
 
@@ -167,7 +173,6 @@ impl<T> IndexMut<usize> for HeapStorage<T> {
     }
 }
 
-
 impl<T: Scalar> Storage<T> for HeapStorage<T> {
     type SameSize<const M: usize> = HeapStorage<T>;
 
@@ -175,16 +180,19 @@ impl<T: Scalar> Storage<T> for HeapStorage<T> {
     fn as_slice(&self) -> &[T] {
         &self.data
     }
-        
+
     #[inline]
     fn as_mut_slice(&mut self) -> &mut [T] {
         &mut self.data
     }
 
     #[inline]
-    fn zeros(len: usize) -> Self where T: Scalar {
+    fn zeros(len: usize) -> Self
+    where
+        T: Scalar,
+    {
         Self {
-            data: vec![T::zero(); len] 
+            data: vec![T::zero(); len],
         }
     }
 }
