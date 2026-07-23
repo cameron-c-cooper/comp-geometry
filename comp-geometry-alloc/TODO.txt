@@ -1,0 +1,37 @@
+Establish mem utils, layout rounding, safety wrappers
+ - fast bitwise layout utils i.e. align_up, align_down, size class mapping
+ - define core data structures such as FreeNode, SpanHeader, SizeClass
+ - set up unit tests
+
+Create the fallback path for large matrix allocs > 2MiB using direct OS calls
+and huge pages
+ - OS vmem wrappers or crate for mmap/munmap
+ - kernel hints with madvise MADV_HUGEPAGE
+ - independent allocator_api2::alloc::Allocator to test page mapping
+   performace with criterion or some other benchmark/profiling tool
+
+Manage backing memory spans between 64 KiB - 2 MiB using a global page heap
+with either a buddy allocator or bitmapped heap to allocate to thread caches
+The 64 KiB is refilling size
+ - Implement a buddy allocator or page bitmap over memory requested
+ - setup mutex locks for global thread pools to allow multithreaded cache
+   refill
+ - batch transfer routine (refill n objs at once into thread caches to minimize
+   lock contention
+
+thread local fast path < 2 KiB
+ - size classified stack arrs
+ - intrusive single linked list popping and pushing for 3-5 instruction exec
+ - setup thread_local! or #[thread_local]
+ - setup cache miss -> req from page heap
+
+mem safety validation
+ - impl allocator trait from allocator_api2
+ - validate with miri
+ - stress test with address santitizer and thread race detector
+
+perf benchmarking
+ - see if i can use this allocator for AsFem?
+ - high load benchmarking
+ - lowkey dont need small use benchmarks as comp geometry engines should be
+   pretty heavy as a target

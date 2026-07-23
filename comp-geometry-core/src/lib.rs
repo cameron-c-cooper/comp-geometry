@@ -8,7 +8,10 @@ pub extern crate allocator_api2;
 
 use std::{
     fmt::Debug,
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
+    ops::{
+        Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg,
+        Sub, SubAssign,
+    },
 };
 
 use allocator_api2::{
@@ -115,7 +118,9 @@ impl_scalar_float!(f32, f64);
 impl_scalar_sint!(i32, i64, i128, isize);
 impl_scalar_uint!(u32, u64, u128, usize);
 
-pub trait Storage<T>: Index<usize, Output = T> + IndexMut<usize, Output = T> {
+pub trait Storage<T>:
+    Index<usize, Output = T> + IndexMut<usize, Output = T>
+{
     type SameSize<const N: usize>: Storage<T>;
     fn as_slice(&self) -> &[T];
     fn as_mut_slice(&mut self) -> &mut [T];
@@ -224,7 +229,8 @@ where
     }
 }
 
-impl<T, A1: Allocator, A2: Allocator> PartialEq<HeapStorage<T, A2>> for HeapStorage<T, A1>
+impl<T, A1: Allocator, A2: Allocator> PartialEq<HeapStorage<T, A2>>
+    for HeapStorage<T, A1>
 where
     T: PartialEq,
 {
