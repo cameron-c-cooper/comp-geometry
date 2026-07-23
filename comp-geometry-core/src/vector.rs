@@ -18,7 +18,7 @@ pub use crate::{
 pub type SVector<T, const N: usize> = SMatrix<T, N, 1, N>;
 pub type HVector<T, const N: usize> = HMatrix<T, N, 1>;
 
-pub trait VectorSpace: Sized {
+pub trait VectorSpace {
     type Scalar: Scalar;
     fn dimension(&self) -> usize;
     fn dot(&self, rhs: &Self) -> Self::Scalar;
