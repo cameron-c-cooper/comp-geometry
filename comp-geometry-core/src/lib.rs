@@ -109,6 +109,23 @@ impl_scalar_float!(f32, f64);
 impl_scalar_sint!(i32, i64, i128, isize);
 impl_scalar_uint!(u32, u64, u128, usize);
 
+pub trait FloatVal {
+    fn sqrt(self) -> Self;
+}
+
+impl FloatVal for f32 {
+    #[inline(always)]
+    fn sqrt(self) -> Self {
+        self.sqrt()    
+    }
+}
+impl FloatVal for f64 {
+    #[inline(always)]
+    fn sqrt(self) -> Self {
+        self.sqrt()
+    }
+}
+
 pub trait Storage<T>:
     Index<usize, Output = T> + IndexMut<usize, Output = T>
 {

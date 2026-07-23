@@ -1,4 +1,4 @@
-use crate::vector::{Vector2, Vector3, Vector4};
+use crate::vector::{Vector2, Vector3, Vector4, Vector5, Vector6, Vector7};
 
 macro_rules! impl_point {
     ($point:ident, $vec:ident { $($field:ident),+ $(,)? }) => {
@@ -58,7 +58,20 @@ macro_rules! impl_point {
 
         impl<T: $crate::SignedScalar> $crate::euclidean_space::EuclideanSpace for $point<T> {
             type Scalar = T;
-            type Diff = $vec<T>;
+            type Vector = $vec<T>;
+            fn origin() -> Self {
+                Self { $($field: T::zero()),+ }
+            }
+            fn from_vec(v: Self::Vector) -> Self {
+                Self {
+                    $($field: v.$field),+
+                }
+            }
+            fn to_vec(self) -> Self::Vector {
+                Self::Vector {
+                    $($field: self.$field),+
+                } 
+            }
         }
     };
 }
@@ -67,3 +80,9 @@ macro_rules! impl_point {
 impl_point!(Point2, Vector2 { x, y });
 impl_point!(Point3, Vector3 { x, y, z });
 impl_point!(Point4, Vector4 { x, y, z, w });
+impl_point!(Point5, Vector5 { x, y, z, u, v });
+impl_point!(Point6, Vector6 { x, y, z, rx, ry, rz });
+impl_point!(Point7, Vector7 { x, y, z, rx, ry, rz, warp });
+
+
+// TODO: Add tests for proper point impl behavior
