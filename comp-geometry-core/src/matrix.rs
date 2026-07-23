@@ -29,7 +29,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, S> IndexMut<usize> for Matrix<T, R, C, S>
+impl<T, const R: usize, const C: usize, S> IndexMut<usize>
+    for Matrix<T, R, C, S>
 where
     S: Storage<T>,
     T: Scalar,
@@ -43,7 +44,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, S> AddAssign<&Matrix<T, R, C, S>> for Matrix<T, R, C, S>
+impl<T, const R: usize, const C: usize, S> AddAssign<&Matrix<T, R, C, S>>
+    for Matrix<T, R, C, S>
 where
     T: Scalar + AddAssign,
     S: Storage<T>,
@@ -58,7 +60,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, S> AddAssign<Matrix<T, R, C, S>> for Matrix<T, R, C, S>
+impl<T, const R: usize, const C: usize, S> AddAssign<Matrix<T, R, C, S>>
+    for Matrix<T, R, C, S>
 where
     T: Scalar + AddAssign,
     S: Storage<T>,
@@ -69,7 +72,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize> Add for SMatrix<T, R, C, N>
+impl<T, const R: usize, const C: usize, const N: usize> Add
+    for SMatrix<T, R, C, N>
 where
     T: Scalar,
     StackStorage<T, N>: Storage<T>,
@@ -81,8 +85,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize> Add<&SMatrix<T, R, C, N>>
-    for SMatrix<T, R, C, N>
+impl<T, const R: usize, const C: usize, const N: usize>
+    Add<&SMatrix<T, R, C, N>> for SMatrix<T, R, C, N>
 where
     T: Scalar,
     StackStorage<T, N>: Storage<T>,
@@ -103,8 +107,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize> Add<&SMatrix<T, R, C, N>>
-    for &SMatrix<T, R, C, N>
+impl<T, const R: usize, const C: usize, const N: usize>
+    Add<&SMatrix<T, R, C, N>> for &SMatrix<T, R, C, N>
 where
     T: Scalar,
     StackStorage<T, N>: Storage<T>,
@@ -143,7 +147,8 @@ macro_rules! smatrix {
     }};
 }
 
-pub type HMatrix<T, const R: usize, const C: usize> = Matrix<T, R, C, HeapStorage<T>>;
+pub type HMatrix<T, const R: usize, const C: usize> =
+    Matrix<T, R, C, HeapStorage<T>>;
 
 impl<T, const R: usize, const C: usize> HMatrix<T, R, C>
 where
@@ -171,7 +176,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize> Add<&HMatrix<T, R, C>> for HMatrix<T, R, C>
+impl<T, const R: usize, const C: usize> Add<&HMatrix<T, R, C>>
+    for HMatrix<T, R, C>
 where
     T: Scalar,
     HeapStorage<T>: Storage<T>,
@@ -193,7 +199,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize> Add<&HMatrix<T, R, C>> for &HMatrix<T, R, C>
+impl<T, const R: usize, const C: usize> Add<&HMatrix<T, R, C>>
+    for &HMatrix<T, R, C>
 where
     T: Scalar,
     HeapStorage<T>: Storage<T>,
@@ -274,8 +281,8 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> Mul<&Matrix<T, C, N, SRhs>>
-    for &Matrix<T, R, C, SLhs>
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs>
+    Mul<&Matrix<T, C, N, SRhs>> for &Matrix<T, R, C, SLhs>
 where
     T: Scalar,
     SLhs: Storage<T>,
@@ -306,15 +313,17 @@ where
     }
 }
 
-impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> Mul<&Matrix<T, C, N, SRhs>>
-    for Matrix<T, R, C, SLhs>
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs>
+    Mul<&Matrix<T, C, N, SRhs>> for Matrix<T, R, C, SLhs>
 where
     T: Scalar,
     SLhs: Storage<T>,
     SRhs: Storage<T>,
     SLhs::SameSize<{ R * N }>: Storage<T>,
-    for<'a, 'b> &'a Matrix<T, R, C, SLhs>:
-        Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
+    for<'a, 'b> &'a Matrix<T, R, C, SLhs>: Mul<
+            &'b Matrix<T, C, N, SRhs>,
+            Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>,
+        >,
 {
     type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
 
@@ -325,15 +334,17 @@ where
 }
 
 // Matrix * Matrix
-impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs> Mul<Matrix<T, C, N, SRhs>>
-    for Matrix<T, R, C, SLhs>
+impl<T, const R: usize, const C: usize, const N: usize, SLhs, SRhs>
+    Mul<Matrix<T, C, N, SRhs>> for Matrix<T, R, C, SLhs>
 where
     T: Scalar,
     SLhs: Storage<T>,
     SRhs: Storage<T>,
     SLhs::SameSize<{ R * N }>: Storage<T>,
-    for<'a, 'b> &'a Matrix<T, R, C, SLhs>:
-        Mul<&'b Matrix<T, C, N, SRhs>, Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>>,
+    for<'a, 'b> &'a Matrix<T, R, C, SLhs>: Mul<
+            &'b Matrix<T, C, N, SRhs>,
+            Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>,
+        >,
 {
     type Output = Matrix<T, R, N, SLhs::SameSize<{ R * N }>>;
 
