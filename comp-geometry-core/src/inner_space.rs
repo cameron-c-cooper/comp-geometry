@@ -47,12 +47,27 @@ pub trait InnerSpace:
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+
+use super::*;
     use crate::vector::Vector3;
     #[test]
     fn magnitude() {
         let mag = Vector3::new(1.0, 2.0, 0.0).magnitude();
         let golden_val = 5.0f32.sqrt();
         assert!((mag - golden_val).abs() < f32::EPSILON);
+    }
+    #[test]
+    fn normalize() {
+        let vec = Vector3::new(1.0, 2.0, 0.0);
+        let normalized_vec = vec.normalize();
+        let golden_vec = vec / 5.0.sqrt();
+        assert!((golden_vec - normalized_vec).magnitude() < f32::EPSILON);
+    }
+    #[test]
+    fn projection() {
+        let v = Vector3::new(1.0, 2.0, 3.0);
+        let u = Vector3::new(4.0, 1.0, 0.0);
+        let golden = Vector3::new(24.0/17.0, 6.0/17.0, 0.0);
+        assert!((golden - v.project_on(u)).magnitude() < f32::EPSILON);
     }
 }

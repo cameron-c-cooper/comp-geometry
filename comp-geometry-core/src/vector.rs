@@ -263,6 +263,8 @@ mod tests {
         assert_eq!(vec2.dot(&vec1), 4);
     }
 
+    // I am keeping these tests as basically a regression tester for matrix
+    // and vec to and from
     #[test]
     fn matrix_from_vec2() {
         let vec1 = Vector2::new(0, 0);
