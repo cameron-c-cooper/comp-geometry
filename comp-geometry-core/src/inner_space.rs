@@ -40,6 +40,11 @@ pub trait InnerSpace:
     }
 
     #[inline]
+    fn norm_squared(self) -> Self::Scalar {
+        self.magnitude_squared()
+    }
+
+    #[inline]
     fn project_on(self, other: Self) -> Self {
         other * (self.dot(other) / other.magnitude_squared())
     }

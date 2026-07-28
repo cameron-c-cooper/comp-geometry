@@ -1,4 +1,4 @@
-use crate::vector::{Vector2, Vector3, Vector4};
+use crate::vector::{Vector2, Vector3, Vector4, Vector5, Vector6, Vector7};
 
 macro_rules! impl_point {
     ($point:ident, $vec:ident { $($field:ident),+ $(,)? }) => {
@@ -12,6 +12,20 @@ macro_rules! impl_point {
             #[inline]
             pub const fn new($($field: T),+) -> Self {
                 Self { $($field),+ }
+            }
+        }
+
+        impl<T> From<$vec<T>> for $point<T> {
+            #[inline]
+            fn from(v: $vec<T>) -> Self {
+                Self { $($field: v.$field),+ }
+            }
+        }
+
+        impl<T> From<$point<T>> for $vec<T> {
+            #[inline]
+            fn from(p: $point<T>) -> Self {
+                Self { $($field: p.$field),+ }
             }
         }
 
@@ -59,6 +73,20 @@ macro_rules! impl_point {
         impl<T: $crate::SignedScalar> $crate::euclidean_space::EuclideanSpace for $point<T> {
             type Scalar = T;
             type Diff = $vec<T>;
+            #[inline]
+            fn origin() -> Self {
+                Self::new($( { let _ = stringify!($field); T::zero() } ),+)
+            }
+
+            #[inline]
+            fn to_vec(self) -> Self::Diff {
+                $vec::new($(self.$field),+)
+            }
+
+            #[inline]
+            fn from_vec(v: Self::Diff) -> Self {
+                Self::new($(v.$field),+)
+            }
         }
     };
 }
@@ -67,3 +95,27 @@ macro_rules! impl_point {
 impl_point!(Point2, Vector2 { x, y });
 impl_point!(Point3, Vector3 { x, y, z });
 impl_point!(Point4, Vector4 { x, y, z, w });
+impl_point!(Point5, Vector5 { x, y, z, u, v });
+impl_point!(
+    Point6,
+    Vector6 {
+        x,
+        y,
+        z,
+        rx,
+        ry,
+        rz
+    }
+);
+impl_point!(
+    Point7,
+    Vector7 {
+        x,
+        y,
+        z,
+        rx,
+        ry,
+        rz,
+        warp
+    }
+);
