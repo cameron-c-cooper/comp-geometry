@@ -1,9 +1,12 @@
-use std::ops::Sub;
+use std::ops::{Add, Sub};
 
 use crate::{Scalar, inner_space::InnerSpace};
 
 pub trait EuclideanSpace:
-    Copy + Sub<Self, Output = <Self as EuclideanSpace>::Diff>
+    Copy
+    + Sub<Self, Output = <Self as EuclideanSpace>::Diff>
+    + Add<<Self as EuclideanSpace>::Diff, Output = Self>
+    + PartialEq
 {
     type Scalar: Scalar;
     type Diff: InnerSpace<Scalar = Self::Scalar>;

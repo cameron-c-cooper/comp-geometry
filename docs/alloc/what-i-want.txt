@@ -1,0 +1,23 @@
+So what do I want from this?
+
+I want extreme
+
++-----------------------------------------+
+| Vec<T, CompAllocator>/Box<T, CompAlloc> |
++-----------------------------------------+
+		  |
+	calls Allocator::Allocate
+		  |
++--------------------------------+
+| comp-geometry-alloc::Allocator |
++--------------------------------+
+
+
+if layout.size() > 256 KiB
+
+	direct system allocate with mmap
+
+else
+	thread local tlsf cache, lockfree
+	if cache_miss
+		shared global tlsf, mutex protected arena
