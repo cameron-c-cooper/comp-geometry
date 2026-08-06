@@ -354,8 +354,42 @@ where
     }
 }
 
+impl<T: Scalar, const R: usize> HMatrix<T, R, R> {
+    pub fn identity() -> Self {
+        let mut v = vec![T::zero(); R * R];
+        for i in 0..R {
+            v[i * R + i] = T::one();
+        }
+        Self {
+            storage: HeapStorage::<T> { data: v },
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T: Scalar, const R: usize, const N: usize> SMatrix<T, R, R, N>
+where
+    [(); R * R]:,
+{
+    pub fn identity() -> Self {
+        let mut r = [T::zero(); N];
+        for i in 0..R {
+            r[i * R + i] = T::one();
+        }
+        Self {
+            storage: StackStorage::<T, N> { data: r },
+            _marker: PhantomData,
+        }
+    }
+}
+
+pub type Matrix2x2<T, S> = Matrix<T, 2, 2, S>;
+
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::matrix::SMatrix;
+
     #[test]
     fn mat_add() {
         let smat_rhs = smatrix![[1, 2], [3, 4]];
@@ -383,6 +417,14 @@ mod tests {
         let golden_mat = matrix![[55, 64], [12, 15]];
         assert_eq!(mat_lhs * mat_rhs, golden_mat);
     }
-}
 
-pub type Matrix2x2<T, S> = Matrix<T, 2, 2, S>;
+    #[test]
+    fn mat_identity() {
+        let goldens = matrix![[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+        let goldenh = hmatrix![[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+        let identitys: SMatrix<i32, 3, 3, 9> = SMatrix::identity();
+        let identityh: HMatrix<i32, 3, 3> = HMatrix::identity();
+        assert_eq!(goldens, identitys);
+        assert_eq!(goldenh, identityh);
+    }
+}
